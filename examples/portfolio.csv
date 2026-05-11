@@ -1,0 +1,5 @@
+ticker,sector,weight,source
+NVDA,Technology,0.14,Google Finance sample
+AMZN,Consumer Discretionary,0.09,Google Finance sample
+PLD,Real Estate,0.07,Google Finance sample
+

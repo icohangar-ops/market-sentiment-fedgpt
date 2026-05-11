@@ -1,0 +1,8 @@
+indicator,value,source_date,source
+aaii_bull_bear,-18,2026-05-08,AAII sample
+naaim_exposure,42,2026-05-08,NAAIM sample
+vix,26.5,2026-05-08,CBOE sample
+put_call,1.18,2026-05-08,CBOE sample
+consumer_confidence,68,2026-05-01,Conference Board sample
+umich_sentiment,66,2026-05-01,University of Michigan sample
+

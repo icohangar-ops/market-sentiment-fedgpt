@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "market-sentiment-fedgpt"
+version = "0.1.0"
+description = "FedGPT plus market sentiment analyzer with CHP-style adversarial verification."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Cubiczan" }]
+dependencies = []
+
+[project.scripts]
+market-sentiment-fedgpt = "market_sentiment_fedgpt.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
