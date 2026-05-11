@@ -1,6 +1,6 @@
 # Market Sentiment FedGPT
 
-Market Sentiment FedGPT turns Dave Wang-style FedGPT, market sentiment, and Google Finance briefing prompts into a deterministic CFO/investor workflow.
+Market Sentiment FedGPT turns Fed speech analysis, market sentiment, and portfolio briefing workflows into a deterministic CFO/investor research system.
 
 It combines:
 
@@ -46,4 +46,3 @@ The built-in verifier blocks decision-ready status if:
 - confidence is below 100
 
 This is not investment advice. It is an auditable research workflow template.
-
