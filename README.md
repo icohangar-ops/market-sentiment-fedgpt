@@ -46,3 +46,7 @@ The built-in verifier blocks decision-ready status if:
 - confidence is below 100
 
 This is not investment advice. It is an auditable research workflow template.
+
+## Demo
+
+📺 [Watch the demo](demos/$(basename "$video")) — slide-style walkthrough of key features and usage.
