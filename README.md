@@ -86,7 +86,7 @@ Every report passes through an adversarial verification layer inspired by CHP (C
 Clone the repository and install in development mode:
 
 ```bash
-git clone https://github.com/cubiczan/market-sentiment-fedgpt.git
+git clone https://github.com/icohangar-ops/market-sentiment-fedgpt.git
 cd market-sentiment-fedgpt
 pip install -e .
 ```
