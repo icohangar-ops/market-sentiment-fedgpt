@@ -56,7 +56,7 @@ Every report passes through an adversarial verification layer inspired by CHP (C
 | Component           | Technology                                          |
 |---------------------|-----------------------------------------------------|
 | Language            | Python 3.10+                                        |
-| Dependencies        | Zero external dependencies (stdlib only)            |
+| Dependencies        | stdlib core; optional Airbyte SDK & FRED API       |
 | Build System        | setuptools (via pyproject.toml)                     |
 | Testing             | pytest                                              |
 | CI                  | GitHub Actions                                      |
@@ -226,6 +226,7 @@ market-sentiment-fedgpt/
 |       +-- __init__.py          # Package init, exports analyze_market
 |       +-- cli.py               # CLI entry point (argparse)
 |       +-- core.py              # Analysis engine, data classes, verification
+       +-- airbyte_providers.py    # Airbyte SDK integration, FRED live fetch
 +-- tests/
 |   +-- test_basic.py            # Unit tests for core functions
 |   +-- test_market_sentiment.py # Integration tests with example data
@@ -233,6 +234,7 @@ market-sentiment-fedgpt/
 +-- pyproject.toml               # Build configuration
 +-- README.md                    # This file
 +-- requirements.txt             # Development dependencies
++-- .env.example                 # Environment variable template (Airbyte, FRED)
 ```
 
 ## Contributing
@@ -252,3 +254,111 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 This is not investment advice. It is an auditable research workflow template.
+
+## Airbyte Integration
+
+Market Sentiment FedGPT now integrates with the **Airbyte AI Agents Python SDK** to automate the data ingestion pipeline. Instead of manually downloading CSV files and text transcripts, the system can fetch market indicators directly from the FRED API via Airbyte-backed connectors, with graceful fallback to local files.
+
+### How It Works
+
+```
++-------------------+     +------------------+     +-------------------+
+|  FRED API         |     |  Airbyte SDK     |     |  CSV Fallback     |
+|  (live data)      |     |  (connectors)    |     |  (offline mode)   |
++--------+----------+     +--------+---------+     +--------+----------+
+         |                         |                       |
+         +------------+------------+-----------+-----------+
+                      |
+                      v
+           +----------+-----------+
+           |  airbyte_providers  |
+           |  fetch_live_indicators()
+           |  analyze_market_via_airbyte()
+           +----------+-----------+
+                      |
+                      v
+           +----------+-----------+
+           |  core.py engine     |
+           |  (same scoring &    |
+           |   verification)     |
+           +---------------------+
+```
+
+### Setup
+
+1. Copy the environment template and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+2. Install the dependencies:
+
+```bash
+pip install -e ".[dev]"
+pip install airbyte-agent-sdk
+```
+
+3. Export credentials (or use a `.env` file with `python-dotenv`):
+
+```bash
+export AIRBYTE_CLIENT_ID=<your_client_id>
+export AIRBYTE_CLIENT_SECRET=<your_client_secret>
+export FRED_API_KEY=<your_fred_api_key>   # Optional, enables direct FRED calls
+```
+
+### Usage
+
+**Async live analysis** (fetches indicators from FRED, falls back to CSV):
+
+```python
+import asyncio
+from market_sentiment_fedgpt.airbyte_providers import analyze_market_via_airbyte
+
+result = asyncio.run(analyze_market_via_airbyte(
+    api_key="your_fred_api_key",
+    portfolio_path="examples/portfolio.csv",
+))
+print(result["data_source"])       # "airbyte_fred_live" or "csv_fallback"
+print(result["airbyte_available"])  # True if SDK + credentials configured
+```
+
+**Fetch live indicators only**:
+
+```python
+from market_sentiment_fedgpt.airbyte_providers import fetch_live_indicators
+
+indicators = fetch_live_indicators(api_key="your_fred_api_key")
+for ind in indicators:
+    print(f"{ind['indicator']}: {ind['value']} ({ind['source_date']})")
+```
+
+**MCP server configuration** for AI agent IDEs:
+
+```python
+from market_sentiment_fedgpt.airbyte_providers import get_mcp_config
+
+config = get_mcp_config()
+# Add to Claude Code: claude mcp add --transport http airbyte-agent https://mcp.airbyte.ai/mcp
+```
+
+### Backward Compatibility
+
+The existing `analyze_market()` function in `core.py` is completely unchanged. It continues to read from local CSV and TXT files exactly as before. The Airbyte integration is additive — it provides a new async `analyze_market_via_airbyte()` path alongside the original synchronous CSV-based path.
+
+### FRED Series Mappings
+
+| CSV Indicator      | FRED Series ID | Notes                                      |
+|--------------------|----------------|--------------------------------------------|
+| vix                | VIXCLS         | CBOE Volatility Index                       |
+| put_call           | CBOE_PC        | CBOE Total Put/Call Ratio                  |
+| consumer_confidence| UMCSENT        | UMich Consumer Sentiment (closest free proxy)|
+| umich_sentiment    | UMCSENT        | University of Michigan Consumer Sentiment  |
+| aaii_bull_bear     | —              | Not in FRED; falls back to CSV             |
+| naaim_exposure     | —              | Not in FRED; falls back to CSV             |
+
+Indicators without a FRED series mapping are automatically filled from the local CSV fallback file, ensuring all six required indicators are always present for the verification gate.
+
+### Future Connectors
+
+When Airbyte adds financial data connectors to its catalog (FRED, Alpha Vantage, SEC EDGAR), they can be wired into `airbyte_providers.py` without changes to `core.py`. The module is designed as a thin data-fetching layer that produces the same dict format the core engine already consumes.

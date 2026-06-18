@@ -1,1 +1,2 @@
 pytest>=7.0
+airbyte-agent-sdk>=0.1.0
